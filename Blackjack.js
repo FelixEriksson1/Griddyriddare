@@ -5,12 +5,8 @@ var DealerValue = 0;
 var YourValue = 0;
 var dealerAcesInHand = 0;
 var yourAcesInHand = 0;
-
-
 var hidden;
 var deck;
-
-
 var canHit = true;
 
 //skapar och startar spelet efter allt har laddat in
@@ -34,8 +30,6 @@ function buildDeck() {
     }
 
 }
-
-
 
 function shuffleDeck() {
     for (let i = deck.length - 1; i > 0; i--) {
@@ -66,16 +60,14 @@ function checkAce(card) {
 }
 
 // Kollar om spelarens poäng är över 21 och om den har några ess i handen. Om den har ess i handen och över 21 ska spelarens poäng minska med 10
-function reduceAce(YourValue, yourAcesInHand) {
+function aceValue(YourValue, yourAcesInHand) {
     if (YourValue > 21 && yourAcesInHand > 0) { 
         YourValue - 10;
         yourAcesInHand -1;
     }
         else if (YourValue > 21 && yourAcesInHand === 0 ) {
             return YourValue; 
-        }
-        
-        
+        } 
     }
 
 function startGame() {
@@ -124,10 +116,11 @@ function hit() {
     YourValue += getValue(card);
     yourAcesInHand += checkAce(card);
     document.getElementById("your-cards").append(cardImg);
+    aceValue(YourValue, yourAcesInHand);
     
 
 
-    if (reduceAce(YourValue, yourAcesInHand) > 21) {
+    if (aceValue(YourValue, yourAcesInHand) > 21) {
         canHit = false;
 
     }
@@ -138,8 +131,8 @@ function hit() {
 
 
 function stand() {
-    DealerValue = reduceAce(DealerValue, dealerAcesInHand);
-    YourValue = reduceAce(YourValue, yourAcesInHand);
+    DealerValue = aceValue(DealerValue, dealerAcesInHand);
+    YourValue = aceValue(YourValue, yourAcesInHand);
 
     while (DealerValue < 17) {
 
