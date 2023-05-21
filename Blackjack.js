@@ -3,10 +3,14 @@
 //startar spelet med att ange kortens värde till 0 för både dealer och spelare
 var DealerValue = 0;
 var YourValue = 0;
-var dealerAcesInHand = 0;
-var yourAcesInHand = 0;
+var dealerAceCount = 0;
+var yourAceCount = 0;
+
+
 var hidden;
 var deck;
+
+
 var canHit = true;
 
 //skapar och startar spelet efter allt har laddat in
@@ -18,68 +22,44 @@ window.onload = function () {
 
 //gör en loop i en annan loop för att ange en type för varje value som sedan skapas med hjälp av push
 function buildDeck() {
-    let ranks = ["a", "2", "3", "4", "5", "6", "7", "8", "9", "10", "j", "q", "k"];
-    let suits = ["Clubs", "Diamonds", "Hearts", "Spades"];
+    let values = ["a", "2", "3", "4", "5", "6", "7", "8", "9", "10", "j", "q", "k"];
+    let types = ["Clubs", "Diamonds", "Hearts", "Spades"];
     deck = [];
 
 
-    for (let i = 0; i < suits.length; i++) {
-        for (let j = 0; j < ranks.length; j++) {
-            deck.push(ranks[j] + "-" + suits[i]);
+    for (let i = 0; i < types.length; i++) {
+        for (let j = 0; j < values.length; j++) {
+            deck.push(values[j] + "-" + types[i]);
         }
     }
 
 }
 
+//returnerar deck i en slumpmäsigt blandad ording med hjälp av inbyggda funktionerna Math.Random och Math.Floor 
+//genom att ange en random value (i) till en random type (j)
 function shuffleDeck() {
-    for (let i = deck.length - 1; i > 0; i--) {
-      let randomIndex = Math.floor(Math.random() * (i + 1));
-      [deck[i], deck[randomIndex]] = [deck[randomIndex], deck[i]];
+    for (let i = 0; i < deck.length; i++) {
+        let j = Math.floor(Math.random() * deck.length);
+        let temp = deck[i];
+        deck[i] = deck[j];
+        deck[j] = temp;
     }
-  }
 
-function getValue(card) {
-    let data = card.split("-");
-    let value = data[0];
-
-    // Nan är not-a-value och kollar om value inte är 2,3,4... upp till 10 så är det inte ett nummer och då ges a, k, q ett värde av 10 eller 11
-    if (isNaN(value)) {
-        if (value === "a") {
-            return 11;
-        }
-        return 10;
-    }
-    return parseInt(value);
 }
 
-function checkAce(card) {
-    if (card[0] == "a") {
-        return 1;
-    }
-    return 0;
-}
-
-// Kollar om spelarens poäng är över 21 och om den har några ess i handen. Om den har ess i handen och över 21 ska spelarens poäng minska med 10
-function aceValue(YourValue, yourAcesInHand) {
-    if (YourValue > 21 && yourAcesInHand > 0) { 
-        YourValue - 10;
-        yourAcesInHand -1;
-    }
-        else if (YourValue > 21 && yourAcesInHand === 0 ) {
-            return YourValue; 
-        } 
-    }
 
 function startGame() {
     hidden = deck.pop();
-    dealerAcesInHand += checkAce(hidden);
+    dealerAceCount += checkAce(hidden);
+
+
 
     for (let i = 0; i < 1; i++) {
         let cardImg = document.createElement("img");
         let card = deck.pop();
         cardImg.src = "./images/" + card + ".png";
         DealerValue += getValue(card);
-        dealerAcesInHand += checkAce(card);
+        dealerAceCount += checkAce(card);
         document.getElementById("dealer-cards").append(cardImg);
         document.getElementById("dealer-sum").innerText = DealerValue;
     }
@@ -90,10 +70,9 @@ function startGame() {
         let card = deck.pop();
         cardImg.src = "./images/" + card + ".png";
         YourValue += getValue(card);
-        yourAcesInHand += checkAce(card);
+        yourAceCount += checkAce(card);
         document.getElementById("your-cards").append(cardImg);
         document.getElementById("your-sum").innerText = YourValue;
-        
     }
 
     document.getElementById("hit").addEventListener("click", hit);
@@ -114,13 +93,11 @@ function hit() {
     let card = deck.pop();
     cardImg.src = "./images/" + card + ".png";
     YourValue += getValue(card);
-    yourAcesInHand += checkAce(card);
+    yourAceCount += checkAce(card);
     document.getElementById("your-cards").append(cardImg);
-    aceValue(YourValue, yourAcesInHand);
-    
 
 
-    if (aceValue(YourValue, yourAcesInHand) > 21) {
+    if (reduceAce(YourValue, yourAceCount) > 21) {
         canHit = false;
 
     }
@@ -131,8 +108,8 @@ function hit() {
 
 
 function stand() {
-    DealerValue = aceValue(DealerValue, dealerAcesInHand);
-    YourValue = aceValue(YourValue, yourAcesInHand);
+    DealerValue = reduceAce(DealerValue, dealerAceCount);
+    YourValue = reduceAce(YourValue, yourAceCount);
 
     while (DealerValue < 17) {
 
@@ -140,7 +117,7 @@ function stand() {
         let card = deck.pop();
         cardImg.src = "./images/" + card + ".png";
         DealerValue += getValue(card);
-        dealerAcesInHand += checkAce(card);
+        dealerAceCount += checkAce(card);
         document.getElementById("dealer-cards").append(cardImg);
 
     }
@@ -183,3 +160,33 @@ function stand() {
 }
 
 
+function getValue(card) {
+    let data = card.split("-");
+    let value = data[0];
+
+
+    if (isNaN(value)) {
+        if (value === "a") {
+            return 11;
+        }
+        return 10;
+    }
+    return parseInt(value);
+}
+
+
+function checkAce(card) {
+    if (card[0] == "a") {
+        return 11;
+    }
+    return 0;
+}
+
+
+function reduceAce(playerSum, playerAceCount) {
+    while (playerSum > 21 && playerAceCount > 0) {
+        playerSum -= 10;
+        playerAceCount -= 1;
+    }
+    return playerSum;
+}
